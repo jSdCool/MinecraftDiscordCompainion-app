@@ -72,11 +72,11 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 		File config;
         Scanner cfs;
         try {
-            config = new File("dischat.cgf");
+            config = new File("config.txt");
             cfs = new Scanner(config);
         }catch(Throwable e){
             try {
-                FileWriter mr = new FileWriter("dischat.cgf");
+                FileWriter mr = new FileWriter("config.txt");
                 mr.write("#botToken=\n#sendServerId=\n#sendChannelId=\n#companion port=15643");
                 mr.close();
                 System.out.println("config file created.");
