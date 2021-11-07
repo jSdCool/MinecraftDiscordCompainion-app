@@ -148,7 +148,13 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
             if (str != null) {
            
             	if(str.contains("<message>§")) {
-                chatChannel.sendMessage(str.substring(10, str.length())).queue();
+            		String lines[] = str.substring(10, str.length()).split("\\\\\\\\n");
+            		String messageOut ="";
+            		for(int i=0;i<lines.length;i++) {
+            			messageOut+=lines[i]+"\n";
+            		}
+            		
+                chatChannel.sendMessage(messageOut).queue();
             	}
             	if(str.contains("<info>§")) {
             		if(str.substring(7,str.length()).equals("<shutdown>")) {
