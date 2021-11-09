@@ -229,8 +229,13 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         }else{
             name = event.getMember().getNickname();
         }
-        
-        ps.println("<name>\\`"+name+"\\`<message>\\`"+content);
+        String[] chunks = content.split("\n");
+        String sendable="";
+        for(int i=0;i<chunks.length;i++) {
+        	sendable+=chunks[i]+"\\n";
+        }
+        sendable=sendable.substring(0,sendable.length()-2);
+        ps.println("<name>\\`"+name+"\\`<message>\\`"+sendable);
         }
 	}
 
