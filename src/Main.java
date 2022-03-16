@@ -8,9 +8,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 import java.util.Scanner;
 
 import javax.security.auth.login.LoginException;
@@ -25,9 +28,13 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.jsdcool.discompnet.CDiscordMessageData;
+import net.jsdcool.discompnet.CMinecraftMessageData;
+import net.jsdcool.discompnet.CompanionData;
 
 public class Main extends ListenerAdapter implements ActionListener, WindowListener{
 
@@ -37,14 +44,17 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 	static String token ="",channelid="",guildid="";
 	static JDA jda;
 	public static MessageChannel chatChannel;
-	static PrintStream ps;
+	//static PrintStream ps;
 	static JFrame frame;
 	static JPanel panel;
 	static JLabel status,passwordLabel,success;
 	static JButton shutdownButton;
 	static boolean connected=false;
-	static BufferedReader br;
+	//static BufferedReader br;
 	static String statusMessage="status: starting";
+	static ObjectOutputStream output;
+	static ObjectInputStream input;
+	static CompanionData dataToSend=new CompanionData();
 	
 	public Main() {
 		frame= new JFrame();
@@ -138,23 +148,23 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         // server executes continuously 
         while (true) { 
         	
-            String str = null; 
   
-            // read from client 
-           //*
-            if (br.ready())
-                str = br.readLine();
+            CompanionData send=dataToSend;
+            dataToSend=new CompanionData();
+            output.writeObject(send);
+            output.flush();
+            output.reset();
+            CompanionData dataIn=(CompanionData)input.readObject();
+            for(int i=0;i<dataIn.data.size();i++) {
+            	if(dataIn.data.get(i) instanceof CMinecraftMessageData msg) {
+            		chatChannel.sendMessage(msg.message).queue();
+            	}
+            }
            
-            if (str != null) {
-           
-            	if(str.contains("<message>§")) {
-            		String lines[] = str.substring(10, str.length()).split("\\\\\\\\n");
-            		String messageOut ="";
-            		for(int i=0;i<lines.length;i++) {
-            			messageOut+=lines[i]+"\n";
-            		}
+            /*
+            
             		
-                chatChannel.sendMessage(messageOut).queue();
+                
             	}
             	if(str.contains("<info>§")) {
             		if(str.substring(7,str.length()).equals("<shutdown>")) {
@@ -162,17 +172,15 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
             			connected=false;
             			s.close();
             			ss.close();
-            			ps.close();
-            			br.close();
+            			output.close();
+            			input.close();
             			s=null;
             			ss=null;
-            			ps=null;
-            			br=null;
             			createSocket();
             		}
             	}
             }
-            
+            */
              
             
             
@@ -196,10 +204,10 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         status.setText("status: connected");
         connected =true;
         // to send data to the client 
-        ps = new PrintStream(s.getOutputStream()); 
+        output = new ObjectOutputStream(s.getOutputStream()); 
   
         // to read data coming from the client 
-        br  = new BufferedReader( new InputStreamReader( s.getInputStream())); 
+        input  = new ObjectInputStream( s.getInputStream()); 
   
 	}
 	
@@ -229,13 +237,15 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         }else{
             name = event.getMember().getNickname();
         }
-        String[] chunks = content.split("\n");
-        String sendable="";
-        for(int i=0;i<chunks.length;i++) {
-        	sendable+=chunks[i]+"\\n";
+        List<Role> roles = event.getMember().getRoles(); 
+        int roleColor=16777215;
+        for(int i=roles.size()-1;i>=0;i--) {
+        	if(536870911!=roles.get(i).getColorRaw())
+        	roleColor = roles.get(i).getColorRaw();
+        	System.out.println(roles.get(i).getName()+" "+ roles.get(i).getColorRaw());
         }
-        sendable=sendable.substring(0,sendable.length()-2);
-        ps.println("<name>\\`"+name+"\\`<message>\\`"+sendable);
+        
+       dataToSend.data.add(new CDiscordMessageData(content,author.getName(),name,author.getId(),roleColor));
         }
 	}
 
