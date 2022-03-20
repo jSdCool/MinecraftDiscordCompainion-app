@@ -36,10 +36,12 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.jsdcool.discompnet.CAuthRequest;
 import net.jsdcool.discompnet.CAuthResponce;
 import net.jsdcool.discompnet.CComandList;
+import net.jsdcool.discompnet.CDataType;
 import net.jsdcool.discompnet.CDiscordMessageData;
 import net.jsdcool.discompnet.CMinecraftMessageData;
 import net.jsdcool.discompnet.CompanionData;
 import net.jsdcool.discompnet.CShutdownData;
+import net.jsdcool.discompnet.CTeleportCommand;
 import net.jsdcool.discompnet.CUnAuthRequest;
 
 public class Main extends ListenerAdapter implements ActionListener, WindowListener{
@@ -214,7 +216,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         					}
         				}
         			}catch(EOFException e) {
-        				e.printStackTrace();
+        				//e.printStackTrace();
         					socketDisconnect();
         					
         			}
@@ -265,7 +267,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         Guild guild = event.getGuild();
         User author = msg.getAuthor();
         String content = msg.getContentRaw();
-        //String contentSections[] = content.split(" ");
+        String contentSections[] = content.split(" ");
         //System.out.println(author + " " + content);
         if(connected) {
         if (guild == null) {
@@ -282,6 +284,29 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         	dataToSend.data.add(new CComandList());
         	System.out.println("sending list command");
         	return;
+        }
+        
+        if(contentSections[0].equals("/tp")) {
+        	if(admins.ids.contains(author.getId())){
+        		if(contentSections.length<5) {
+        			channel.sendMessage("missing parameters").queue();
+        			return;
+        		}
+        		double x=0,y=0,z=0;
+        		try {
+        			x = Double.parseDouble(contentSections[2]);
+        			y = Double.parseDouble(contentSections[3]);
+        			z = Double.parseDouble(contentSections[4]);
+        		}catch(NumberFormatException n) {
+        			channel.sendMessage("value entered was not a number").queue();
+        			return;
+        		}
+        		dataToSend.data.add(new CTeleportCommand(contentSections[1],x,y,z));
+        		return;
+        	}else {
+        		channel.sendMessage("you are not authorized to use this command").queue();
+        		return;
+        	}
         }
         
         String name;
