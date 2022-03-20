@@ -38,6 +38,7 @@ import net.jsdcool.discompnet.CAuthResponce;
 import net.jsdcool.discompnet.CComandList;
 import net.jsdcool.discompnet.CDataType;
 import net.jsdcool.discompnet.CDiscordMessageData;
+import net.jsdcool.discompnet.CGamemodeCommand;
 import net.jsdcool.discompnet.CKickCommand;
 import net.jsdcool.discompnet.CMinecraftMessageData;
 import net.jsdcool.discompnet.CPlayerPositionCommand;
@@ -338,6 +339,21 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         		}
         		
         		dataToSend.data.add(new CKickCommand(contentSections[1],reason));
+        		return;
+        	}else {
+        		channel.sendMessage("you are not authorized to use this command").queue();
+        		return;
+        	}
+        }
+        
+        if(contentSections[0].equals("/gamemode")) {
+        	if(admins.ids.contains(author.getId())){
+        		if(contentSections.length<3) {
+        			channel.sendMessage("missing parameters").queue();
+        			return;
+        		}
+        		
+        		dataToSend.data.add(new CGamemodeCommand(contentSections[2],contentSections[1]));
         		return;
         	}else {
         		channel.sendMessage("you are not authorized to use this command").queue();
