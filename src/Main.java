@@ -39,6 +39,7 @@ import net.jsdcool.discompnet.CComandList;
 import net.jsdcool.discompnet.CDataType;
 import net.jsdcool.discompnet.CDiscordMessageData;
 import net.jsdcool.discompnet.CMinecraftMessageData;
+import net.jsdcool.discompnet.CPlayerPositionCommand;
 import net.jsdcool.discompnet.CompanionData;
 import net.jsdcool.discompnet.CShutdownData;
 import net.jsdcool.discompnet.CTeleportCommand;
@@ -302,6 +303,21 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         			return;
         		}
         		dataToSend.data.add(new CTeleportCommand(contentSections[1],x,y,z));
+        		return;
+        	}else {
+        		channel.sendMessage("you are not authorized to use this command").queue();
+        		return;
+        	}
+        }
+        
+        if(contentSections[0].equals("/pos")) {
+        	if(admins.ids.contains(author.getId())){
+        		if(contentSections.length<2) {
+        			channel.sendMessage("missing parameters").queue();
+        			return;
+        		}
+        		
+        		dataToSend.data.add(new CPlayerPositionCommand(contentSections[1]));
         		return;
         	}else {
         		channel.sendMessage("you are not authorized to use this command").queue();
