@@ -38,6 +38,7 @@ import net.jsdcool.discompnet.CAuthResponce;
 import net.jsdcool.discompnet.CComandList;
 import net.jsdcool.discompnet.CDataType;
 import net.jsdcool.discompnet.CDiscordMessageData;
+import net.jsdcool.discompnet.CKickCommand;
 import net.jsdcool.discompnet.CMinecraftMessageData;
 import net.jsdcool.discompnet.CPlayerPositionCommand;
 import net.jsdcool.discompnet.CompanionData;
@@ -318,6 +319,25 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         		}
         		
         		dataToSend.data.add(new CPlayerPositionCommand(contentSections[1]));
+        		return;
+        	}else {
+        		channel.sendMessage("you are not authorized to use this command").queue();
+        		return;
+        	}
+        }
+        
+        if(contentSections[0].equals("/kickMC")) {
+        	if(admins.ids.contains(author.getId())){
+        		if(contentSections.length<2) {
+        			channel.sendMessage("missing parameters").queue();
+        			return;
+        		}
+        		String reason="";
+        		for(int j=2;j<contentSections.length;j++) {
+        			reason+=contentSections[j]+" ";
+        		}
+        		
+        		dataToSend.data.add(new CKickCommand(contentSections[1],reason));
         		return;
         	}else {
         		channel.sendMessage("you are not authorized to use this command").queue();
