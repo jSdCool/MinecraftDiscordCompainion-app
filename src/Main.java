@@ -5,6 +5,8 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -24,17 +26,21 @@ import javax.swing.JPanel;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.jsdcool.discompnet.CAuthRequest;
+import net.jsdcool.discompnet.CAuthResponce;
 import net.jsdcool.discompnet.CComandList;
 import net.jsdcool.discompnet.CDiscordMessageData;
 import net.jsdcool.discompnet.CMinecraftMessageData;
 import net.jsdcool.discompnet.CompanionData;
 import net.jsdcool.discompnet.CShutdownData;
+import net.jsdcool.discompnet.CUnAuthRequest;
 
 public class Main extends ListenerAdapter implements ActionListener, WindowListener{
 
@@ -53,6 +59,8 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 	static ObjectOutputStream output;
 	static ObjectInputStream input;
 	static CompanionData dataToSend=new CompanionData();
+	static String authFileName="admins.auth";
+	static AuthedUsers admins;
 	
 	public Main() {
 		frame= new JFrame();
@@ -119,6 +127,15 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 
             }
         }
+        try {
+        	FileInputStream auths=new FileInputStream(authFileName);
+        	ObjectInputStream in =new ObjectInputStream(auths);
+        	admins=(AuthedUsers)in.readObject();
+        	in.close();
+        }catch(IOException i) {
+        	admins=new AuthedUsers();
+        }catch (ClassNotFoundException c) {}
+        
         cfs.close();
 		try {
 			jda = JDABuilder.createDefault(token)
@@ -165,17 +182,52 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         					if(dataIn.data.get(i) instanceof CShutdownData) {
         						socketDisconnect();
         					}
+        					if(dataIn.data.get(i) instanceof CAuthRequest dat) {
+        						if(admins.ids.contains(dat.userID)) {
+        							dataToSend.data.add(new CAuthResponce(dat.reqnum,false,"user is alleady authorized"));
+        							//System.out.println("failed to auth");
+        							continue;
+        						}
+        						
+        						//jda.getGuildById(guildid).loadMembers();//re visit this later it is a good idea I just can't figure out how to make this work with the API
+        						//List<Member> members =jda.getGuildById(guildid).getMembers();
+        						if(/*hasMemberById(members,dat.userID)*/true) {
+        							admins.ids.add(dat.userID);
+        							saveAuths();
+        							dataToSend.data.add(new CAuthResponce(dat.reqnum,true,"authorized "/*+jda.getGuildById(guildid).getMemberById(dat.userID).getUser().getName()*/));
+        							//System.out.println("authed user");
+        						}/*else {
+        							dataToSend.data.add(new CAuthResponce(dat.reqnum,false,"could not find user"));
+        							System.out.println("failed to auth");
+        							continue;
+        						}*/
+        						
+        					}
+        					if(dataIn.data.get(i) instanceof CUnAuthRequest dat) {
+        						if(admins.ids.contains(dat.userID)) {
+        							admins.ids.remove(dat.userID);
+        							saveAuths();
+        							dataToSend.data.add(new CAuthResponce(dat.reqnum,true,"un authorized user"));
+        						}else {
+        							dataToSend.data.add(new CAuthResponce(dat.reqnum,false,"user was not authorized"));
+        						}
+        					}
         				}
         			}catch(EOFException e) {
+        				e.printStackTrace();
         					socketDisconnect();
+        					
         			}
             
            
         		}else {
         			socketDisconnect();
+        			//System.out.println("EEEEEEEEEEEEEEEEEE");
         		}
         	}catch(Exception e) {
+        		e.printStackTrace();
         		socketDisconnect();
+        		
         	}
             
             
@@ -190,7 +242,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 
 	}
 	
-	static void createSocket() throws Throwable {
+	static void createSocket() throws Exception {
 		ss = new ServerSocket(port); 
 		  
         // connect it to client socket 
@@ -307,7 +359,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 		System.exit(0);
 	}
 	
-	static void socketDisconnect() throws Throwable {
+	static void socketDisconnect() throws Exception {
 		try {
 		status.setText("status: disconnected");
 		connected=false;
@@ -320,6 +372,28 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 		createSocket();
 		}catch(Exception e) {
 			
+		}
+	
+	}
+	static boolean hasMemberById(List<Member> mems,String id) {
+		System.out.println(mems.size());
+		for(int i=0;i<mems.size();i++) {
+			System.out.println(mems.get(i).getUser().getId()+" "+id);
+			if(mems.get(i).getUser().getId().equals(id))
+				return true;
+		}
+		return false;
+	}
+	
+	public static void saveAuths() {
+		try {
+			FileOutputStream fileOut =new FileOutputStream(authFileName);
+			ObjectOutputStream out = new ObjectOutputStream(fileOut);
+			out.writeObject(admins);
+			out.close();
+        	fileOut.close();
+		}catch(IOException i) {
+			i.printStackTrace();
 		}
 	}
 

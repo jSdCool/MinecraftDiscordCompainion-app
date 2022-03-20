@@ -7,6 +7,5 @@
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry exported="true" kind="lib" path="C:/Users/nisky/Downloads/JDA-4.3.0_277-withDependencies.jar"/>
-	<classpathentry kind="lib" path="C:/Users/nisky/Desktop/random things/discompnet.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
