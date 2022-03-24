@@ -13,6 +13,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -231,7 +232,19 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         			socketDisconnect();
         			//System.out.println("EEEEEEEEEEEEEEEEEE");
         		}
+        	}catch(SocketException so) {
+        		so.printStackTrace();
+        		status.setText("status: disconnected");
+        		connected=false;
+        		s.close();
+        		ss.close();
+        		s=null;
+        		ss=null;
+        		output=null;
+        		input=null;
+        		createSocket();
         	}catch(Exception e) {
+        	
         		e.printStackTrace();
         		socketDisconnect();
         		
