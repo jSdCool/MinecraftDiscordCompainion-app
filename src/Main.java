@@ -380,6 +380,9 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         	dataToSend.data.add(new CVersionCommand());
         	return;
         }
+        if(content.equals("/help")) {
+        	channel.sendMessage("send messages in this channel to make them appear in mincreaft\n===COMMANDS===\n/list    list online players\n/version    get the version of this program, this mod, and the game\n===MODERATOR COMMANDS===\n/tp <player> <x> <y> <z>    teleport a player to that position\n/pos <player>    get the position of a player\n/kickMC <player> [<reason>]    kick a player from the server\n/gamemode <player> <mode>    set the gamemode of a player").queue();
+        }
         
         String name;
         if(event.getMember().getNickname()==null){
