@@ -46,6 +46,7 @@ import net.jsdcool.discompnet.CompanionData;
 import net.jsdcool.discompnet.CShutdownData;
 import net.jsdcool.discompnet.CTeleportCommand;
 import net.jsdcool.discompnet.CUnAuthRequest;
+import net.jsdcool.discompnet.CVersionCommand;
 
 public class Main extends ListenerAdapter implements ActionListener, WindowListener{
 
@@ -66,6 +67,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 	static CompanionData dataToSend=new CompanionData();
 	static String authFileName="admins.auth";
 	static AuthedUsers admins;
+	static String version="1.1.0";
 	
 	public Main() {
 		frame= new JFrame();
@@ -359,6 +361,11 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         		channel.sendMessage("you are not authorized to use this command").queue();
         		return;
         	}
+        }
+        if(content.equals("/version")) {
+        	channel.sendMessage("companion version: "+version).queue();
+        	dataToSend.data.add(new CVersionCommand());
+        	return;
         }
         
         String name;
