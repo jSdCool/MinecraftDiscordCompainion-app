@@ -25,6 +25,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDA.Status;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -68,7 +69,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 	static CompanionData dataToSend=new CompanionData();
 	static String authFileName="admins.auth";
 	static AuthedUsers admins;
-	static String version="1.1.0";
+	static String version="1.1.1";
 	
 	public Main() {
 		frame= new JFrame();
@@ -183,6 +184,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         			CompanionData dataIn;
         			try {
         				dataIn=(CompanionData)input.readObject();
+        				while(jda.getStatus()!=Status.CONNECTED) {}//if not connected to discord wait until connected before continuing 
         				for(int i=0;i<dataIn.data.size();i++) {
         					if(dataIn.data.get(i) instanceof CMinecraftMessageData msg) {
         						chatChannel.sendMessage(msg.message).queue();
@@ -193,22 +195,16 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         					if(dataIn.data.get(i) instanceof CAuthRequest dat) {
         						if(admins.ids.contains(dat.userID)) {
         							dataToSend.data.add(new CAuthResponce(dat.reqnum,false,"user is alleady authorized"));
-        							//System.out.println("failed to auth");
         							continue;
         						}
         						
-        						//jda.getGuildById(guildid).loadMembers();//re visit this later it is a good idea I just can't figure out how to make this work with the API
-        						//List<Member> members =jda.getGuildById(guildid).getMembers();
-        						if(/*hasMemberById(members,dat.userID)*/true) {
+        						
+        						if(true) {
         							admins.ids.add(dat.userID);
         							saveAuths();
         							dataToSend.data.add(new CAuthResponce(dat.reqnum,true,"authorized "/*+jda.getGuildById(guildid).getMemberById(dat.userID).getUser().getName()*/));
-        							//System.out.println("authed user");
-        						}/*else {
-        							dataToSend.data.add(new CAuthResponce(dat.reqnum,false,"could not find user"));
-        							System.out.println("failed to auth");
-        							continue;
-        						}*/
+        							
+        						}
         						
         					}
         					if(dataIn.data.get(i) instanceof CUnAuthRequest dat) {
@@ -382,6 +378,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         }
         if(content.equals("/help")) {
         	channel.sendMessage("send messages in this channel to make them appear in mincreaft\n===COMMANDS===\n/list    list online players\n/version    get the version of this program, this mod, and the game\n===MODERATOR COMMANDS===\n/tp <player> <x> <y> <z>    teleport a player to that position\n/pos <player>    get the position of a player\n/kickMC <player> [<reason>]    kick a player from the server\n/gamemode <player> <mode>    set the gamemode of a player").queue();
+        	return;
         }
         
         String name;
