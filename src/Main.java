@@ -60,7 +60,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 	public static MessageChannel chatChannel;
 	static JFrame frame;
 	static JPanel panel;
-	static JLabel status,passwordLabel,success;
+	static JLabel status,jdaStatus;
 	static JButton shutdownButton;
 	static boolean connected=false;
 	static String statusMessage="status: starting";
@@ -69,7 +69,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 	static CompanionData dataToSend=new CompanionData();
 	static String authFileName="admins.auth";
 	static AuthedUsers admins;
-	static String version="1.1.1";
+	static String version="1.1.2";
 	
 	public Main() {
 		frame= new JFrame();
@@ -84,6 +84,9 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 		status=new JLabel(statusMessage);
 		status.setBounds(10, 20, 300, 25);
 		panel.add(status);
+		jdaStatus=new JLabel("init");
+		jdaStatus.setBounds(10,50,300,25);
+		panel.add(jdaStatus);
 		shutdownButton=new JButton("shutdown");
 		shutdownButton.setBounds(10,80,120,25);
 		shutdownButton.addActionListener(this);
@@ -153,6 +156,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 			        .build();
 			jda.awaitReady();
 			status.setText("status: JDA readdy, wating for connection");
+			jdaStatus.setText("JDA status: "+jda.getStatus());
 		} catch (LoginException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -162,7 +166,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 			e.printStackTrace();
 			status.setText("error");
 		}
-		
+		panel.repaint();
         chatChannel = jda.getGuildById(guildid).getTextChannelById(channelid);
 		
 		try {
@@ -171,7 +175,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 			createSocket();
         // server executes continuously 
         while (true) { 
-        	
+        	jdaStatus.setText("JDA status: "+jda.getStatus());
         	try {
         		if(s.isConnected()&&!s.isClosed()) {
         		
@@ -184,7 +188,10 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         			CompanionData dataIn;
         			try {
         				dataIn=(CompanionData)input.readObject();
-        				while(jda.getStatus()!=Status.CONNECTED) {}//if not connected to discord wait until connected before continuing 
+        				while(jda.getStatus()!=Status.CONNECTED) {//if not connected to discord wait until connected before continuing 
+        					Math.random();
+        					Thread.sleep(100);
+        				}	
         				for(int i=0;i<dataIn.data.size();i++) {
         					if(dataIn.data.get(i) instanceof CMinecraftMessageData msg) {
         						chatChannel.sendMessage(msg.message).queue();
@@ -246,7 +253,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         		
         	}
             
-            
+            panel.repaint();
             
         }//end of while 
   
@@ -364,7 +371,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
         			return;
         		}
         		
-        		dataToSend.data.add(new CGamemodeCommand(contentSections[2],contentSections[1]));
+        		dataToSend.data.add(new CGamemodeCommand(contentSections[1],contentSections[2]));
         		return;
         	}else {
         		channel.sendMessage("you are not authorized to use this command").queue();
