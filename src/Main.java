@@ -27,14 +27,17 @@ import javax.swing.JPanel;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDA.Status;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.OnlineStatus;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.managers.Presence;
 import net.jsdcool.discompnet.CAuthRequest;
 import net.jsdcool.discompnet.CAuthResponce;
 import net.jsdcool.discompnet.CComandList;
@@ -57,7 +60,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 	static int port = 15643;
 	static String token ="",channelid="",guildid="";
 	static JDA jda;
-	public static MessageChannel chatChannel;
+	public static TextChannel chatChannel;
 	static JFrame frame;
 	static JPanel panel;
 	static JLabel status,jdaStatus;
@@ -70,6 +73,8 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 	static String authFileName="admins.auth";
 	static AuthedUsers admins;
 	static String version="1.1.2";
+	static Presence botPresence;
+	static Activity botPlayingStatus;
 	
 	public Main() {
 		frame= new JFrame();
@@ -157,10 +162,10 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 			jda.awaitReady();
 			status.setText("status: JDA readdy, wating for connection");
 			jdaStatus.setText("JDA status: "+jda.getStatus());
-		} catch (LoginException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			status.setText("error");
+			botPresence = jda.getPresence();
+			//TODO update to JDA 5.0.0-beta 14 when it becomes available. then and only then will  ActivityType.CUSTOM_STATUS  be supported. despite existing within the API for years
+			//botPlayingStatus = Activity.of(Activity.ActivityType.CUSTOM_STATUS, "Minecraft Disconnected");
+			//botPresence.setPresence(OnlineStatus.IDLE,botPlayingStatus, false);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -173,6 +178,10 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 		 // Create server Socket 
         
 			createSocket();
+			
+			//botPlayingStatus = Activity.of(Activity.ActivityType.CUSTOM_STATUS, "Connected To Minecraft Server Chat");
+			//botPresence.setPresence(OnlineStatus.ONLINE,botPlayingStatus, false);
+			
         // server executes continuously 
         while (true) { 
         	jdaStatus.setText("JDA status: "+jda.getStatus());
@@ -284,7 +293,7 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 	@Override
 	public void onMessageReceived(MessageReceivedEvent event) {
         Message msg = event.getMessage();
-        MessageChannel channel = event.getChannel();
+        TextChannel channel = event.getChannel().asTextChannel();
         Guild guild = event.getGuild();
         User author = msg.getAuthor();
         String content = msg.getContentRaw();
@@ -465,15 +474,17 @@ public class Main extends ListenerAdapter implements ActionListener, WindowListe
 	
 	static void socketDisconnect() throws Exception {
 		try {
-		status.setText("status: disconnected");
-		connected=false;
-		s.close();
-		ss.close();
-		output.close();
-		input.close();
-		s=null;
-		ss=null;
-		createSocket();
+			botPlayingStatus = Activity.of(Activity.ActivityType.CUSTOM_STATUS, "Minecraft Disconnected");
+			botPresence.setPresence(OnlineStatus.IDLE,botPlayingStatus, false);
+			status.setText("status: disconnected");
+			connected=false;
+			s.close();
+			ss.close();
+			output.close();
+			input.close();
+			s=null;
+			ss=null;
+			createSocket();
 		}catch(Exception e) {
 			
 		}
